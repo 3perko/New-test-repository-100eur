@@ -305,7 +305,7 @@ def fleet_alerts(db: Session, company_id: int) -> list[dict]:
     def add(v, kind, label, valid_to):
         if valid_to is None:
             out.append({"vehicle_id": v.id, "vehicle": f"{v.name} ({v.plate or ''})", "kind": kind,
-                        "severity": "warning", "message": f"{label}: chýba evidencia platnosti", "date": None})
+                        "severity": "missing", "message": f"{label}: chýba evidencia platnosti", "date": None})
         elif valid_to < today:
             out.append({"vehicle_id": v.id, "vehicle": f"{v.name} ({v.plate or ''})", "kind": kind, "severity": "error",
                         "message": f"{label} – platnosť skončila {valid_to:%d.%m.%Y}", "date": valid_to.isoformat()})

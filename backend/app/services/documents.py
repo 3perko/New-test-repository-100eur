@@ -302,6 +302,9 @@ def save_full(ctx, doc: Document, payload: dict) -> Document:
     if doc.lines:
         if doc.vat_breakdown is None or "lines" in payload:
             doc.vat_breakdown = json.dumps(vat_breakdown_from_lines(doc))
+        recompute_totals_from_lines(doc)  # fills only missing header totals
+    elif doc.total_gross is not None and doc.total_net is None and doc.total_vat is not None:
+        doc.total_net = money(Decimal(doc.total_gross) - Decimal(doc.total_vat))
 
     if "allocations" in payload:
         doc.allocations.clear()

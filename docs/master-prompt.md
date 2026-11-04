@@ -359,3 +359,29 @@ Pripomienky zákazníka:
 Požiadavky na UI: logické celky navigácie a univerzálne tabuľkové zobrazenie s výberom stĺpcov z dostupných polí, triedením, filtrovaním, uloženými pohľadmi a exportom – 2.11, 3.1, 3.2 (table_view), fáza 1.
 
 Ďalej: `cost_allocation` premenovaná na `allocation` so smerom náklad/výnos; nová entita odberateľ; snapshot sadzieb na hodinách a jazdách; servis, PZP a známky idú do Réžie.
+
+## 6. Upresnenia pred implementáciou (v1.2)
+
+Odpovede zákazníka na otázky pred začatím implementácie. Platia spolu s kapitolami 1–5.
+
+| Téma | Rozhodnutie |
+| --- | --- |
+| Rozsah | Implementuje sa celá V1 (fázy 1–6) s návodom na spustenie a overenie. WhatsApp, AI asistent a ďalšie body z 2.12 ostávajú na neskôr. |
+| Jazyk | Kód, databáza a API po anglicky, celé UI po slovensky. |
+| Prihlásenie | E-mail + heslo (JWT v httpOnly cookie). Prihlásenie cez Google sa zatiaľ nerobí. |
+| Nasadenie | Docker Compose (aplikácia, PostgreSQL, plánovač). Produkcia na Ubuntu s HTTPS cez Caddy (Let's Encrypt). |
+| Pracovníci | Pracovník je globálny záznam a môže pracovať pre viac firiem (väzba pracovník–firma). Poradie hľadania sadzby: pracovník + zákazka → pracovník + firma → default pracovníka, vždy s platnosťou od–do. Nákladová a fakturačná sadzba sa hľadajú nezávisle. |
+| Vozidlá | Vozidlo firmy A môže jazdiť na zákazku firmy B. Jazda sa eviduje vo firme zákazky a náklad ide na zákazku; prefakturácie medzi firmami sa nerobia. |
+| Sadzba vozidla | História sadzby €/km s platnosťou od–do (entita `vehicle_rate`). Jazda si sadzbu zafixuje (snapshot). |
+| Roly | `admin` (klient) a `worker` (pracovník). Používateľ má prístup k vybraným firmám; admin bez vybraných firiem vidí všetky. |
+| Uzamknutie mesiaca | Nerobí sa. Zamknuté sú len záznamy v uzavretom (vyfakturovanom) podklade k fakturácii. |
+| Výpočet hodín | Hodiny = do − od, bez automatickej prestávky, so zaokrúhlením na nastaviteľný násobok (default 0,25 h). Prechod cez polnoc je povolený a hodiny sa dajú prepísať ručne. |
+| Úpravy pracovníkom | Pracovník môže meniť a mazať svoje hodiny a jazdy, kým nie sú v uzavretom podklade. |
+| Jazdy | Vodič aj posádka sa vyberajú zo zoznamu pracovníkov. Posádka je len informatívna, hodiny sa evidujú zvlášť. |
+| Sadzby a mena | Všetky sadzby sú bez DPH, mena je EUR. |
+| Nákladovosť na … | Odložené (otvorený bod v kapitole 4). |
+| Fakturačná logika | Prirážka na materiál je per zákazka (default z nastavení, 0 %). Doprava sa fakturuje voliteľne per zákazka (sadzba €/km). Pri pevnej cene sa vykazuje práca bez ocenenia. |
+| Banky, overenie vozidla | Podľa 2.5 a 2.8. Verejné overovacie služby nemajú API, preto adaptér ponúka odkaz s ŠPZ a ručný zápis výsledku s porovnaním s evidenciou. |
+| Importy | Zoznamy sa nemigrujú, zákazník ich zadá ručne. Pripravené sú len voliteľné demo dáta na skúšanie. |
+| Google | Bežný Gmail účet: OAuth klient (Web application) s prístupom ku Google Drive a Gmailu, plus-adresy podľa tagu nastaveného pri firme. |
+| Fyzický originál | Elektronické doklady (PDF s textom, e-mail) fyzický originál nepotrebujú. Súbory z Drive inboxu sa podľa parametra považujú za sken fyzického originálu. |

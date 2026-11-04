@@ -53,6 +53,7 @@ def accessible_company_ids(db: Session, user: User) -> list[int]:
 
 
 def get_ctx(
+    request: Request,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
     x_company_id: str | None = Header(default=None),
@@ -60,8 +61,11 @@ def get_ctx(
     company = None
     allowed = accessible_company_ids(db, user)
     cid = None
+    q_company = request.query_params.get("_company")  # for plain links (exports, file downloads)
     if x_company_id and x_company_id.isdigit():
         cid = int(x_company_id)
+    elif q_company and q_company.isdigit():
+        cid = int(q_company)
     elif user.last_company_id:
         cid = user.last_company_id
     if cid is not None:

@@ -1,0 +1,21 @@
+# Produkcia na Ubuntu serveri s doménou a automatickým HTTPS (Let's Encrypt cez Caddy).
+# V .env nastavte DOMAIN, APP_BASE_URL=https://<DOMAIN>, COOKIE_SECURE=true a APP_PORT=127.0.0.1:8000
+services:
+  caddy:
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  caddy_data:
+  caddy_config:

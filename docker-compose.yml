@@ -1,0 +1,52 @@
+# Lokálne / interné nasadenie: aplikácia na http://localhost:8000
+# Produkcia s HTTPS: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
+      POSTGRES_DB: ${POSTGRES_DB:-naklady}
+      TZ: Europe/Bratislava
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-naklady}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    image: naklady-zakaziek:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@db:5432/${POSTGRES_DB:-naklady}
+      STORAGE_DIR: /app/data/files
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - app_files:/app/data
+    ports:
+      - "${APP_PORT:-8000}:8000"
+
+  scheduler:
+    image: naklady-zakaziek:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@db:5432/${POSTGRES_DB:-naklady}
+      STORAGE_DIR: /app/data/files
+    command: ["python", "-m", "app.scheduler"]
+    depends_on:
+      app:
+        condition: service_started
+    volumes:
+      - app_files:/app/data
+
+volumes:
+  db_data:
+  app_files:

@@ -52,6 +52,7 @@ def _doc_with_lines(admin):
 def test_manual_document_split_and_confirm(admin, project, project2):
     full = _doc_with_lines(admin)
     assert full["total_gross"] == 24.6 and full["lines"][0]["total_net"] == 5.0
+    assert full["total_net"] == 20.0 and full["total_vat"] == 4.6  # derived from lines
     l1, l2 = full["lines"]
     # mixed: line 1 split evenly to two projects, line 2 to one project
     r = admin.put(f"/api/documents/{full['id']}/full", json={"allocations": [
@@ -116,11 +117,9 @@ def test_inbox_qr_ekasa_duplicate_and_physical(admin, project, monkeypatch):
     r = admin.post("/api/inbox/upload", files=[("files", ("x.png", img, "image/png"))]).json()
     assert r["stored"][0]["new"] is False
     # physical scan (different image, same QR) -> duplicate detected, original marked physical
-    img2 = qr_png(RID)[:-0] + b""
-    import cv2 as _cv
-    arr = _cv.imdecode(np.frombuffer(qr_png(RID), np.uint8), _cv.IMREAD_GRAYSCALE)
-    arr = _cv.copyMakeBorder(arr, 10, 10, 10, 10, _cv.BORDER_CONSTANT, value=255)
-    img2 = _cv.imencode(".png", arr)[1].tobytes()
+    arr = cv2.imdecode(np.frombuffer(img, np.uint8), cv2.IMREAD_GRAYSCALE)
+    arr = cv2.copyMakeBorder(arr, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=255)
+    img2 = cv2.imencode(".png", arr)[1].tobytes()
     r = admin.post("/api/inbox/upload", data={"physical": "true"},
                    files=[("files", ("sken.png", img2, "image/png"))]).json()
     assert r["results"][0]["status"] == "duplicate"
