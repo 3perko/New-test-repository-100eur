@@ -1,0 +1,12 @@
+# Prístup z internetu cez Cloudflare Tunnel (HTTPS, bez otvárania portov na routeri).
+# Vhodné, keď server beží na vlastnom počítači. Návod: installation-guide/README.md, kapitola 6.
+#   docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d --build
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2024.12.2
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Nastavte TUNNEL_TOKEN v .env}
+    depends_on:
+      - app

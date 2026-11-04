@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ako funguje aplikácia</title>
+<meta name="description" content="Interaktívny popis aplikácie Náklady zákaziek na štyroch úrovniach – od základov po technické detaily.">
+<style>
+:root {
+  --bg: #f6f8fb; --surface: #ffffff; --surface-2: #f1f4f9; --text: #0f172a; --muted: #5b6577; --border: #dde3ec;
+  --brand: #245a98; --brand-strong: #1e3a5f; --brand-soft: #e6eef8; --ok: #0f7b4f; --ok-soft: #e3f4ec;
+  --warn: #9a5b00; --warn-soft: #fdf1dc; --bad: #b42318; --bad-soft: #fde8e6; --code-bg: #f1f4f9;
+  --l1: #2f6db5; --l2: #0f7b4f; --l3: #9a5b00; --l4: #6d3fb5;
+  --shadow: 0 1px 2px rgba(15,23,42,.06), 0 4px 16px rgba(15,23,42,.05);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1220; --surface: #111a2b; --surface-2: #17223a; --text: #e6ebf3; --muted: #9aa6ba; --border: #253250;
+    --brand: #7fb0ea; --brand-strong: #bcd5f5; --brand-soft: #18294a; --ok: #4fd29a; --ok-soft: #10301f;
+    --warn: #f0b354; --warn-soft: #33260e; --bad: #ff8a80; --bad-soft: #3a1513; --code-bg: #17223a;
+    --l1: #7fb0ea; --l2: #4fd29a; --l3: #f0b354; --l4: #b79cf0; --shadow: none; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1220; --surface: #111a2b; --surface-2: #17223a; --text: #e6ebf3; --muted: #9aa6ba; --border: #253250;
+  --brand: #7fb0ea; --brand-strong: #bcd5f5; --brand-soft: #18294a; --ok: #4fd29a; --ok-soft: #10301f;
+  --warn: #f0b354; --warn-soft: #33260e; --bad: #ff8a80; --bad-soft: #3a1513; --code-bg: #17223a;
+  --l1: #7fb0ea; --l2: #4fd29a; --l3: #f0b354; --l4: #b79cf0; --shadow: none; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--brand); }
+code, pre { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .88em; }
+code { background: var(--code-bg); padding: .1em .35em; border-radius: 4px; }
+pre { background: var(--code-bg); padding: 12px 14px; border-radius: 8px; overflow-x: auto; line-height: 1.45; }
+h1, h2, h3 { line-height: 1.25; text-wrap: balance; }
+h2 { margin: 0 0 .4em; font-size: 1.45rem; }
+h3 { margin: 1.4em 0 .4em; font-size: 1.1rem; }
+p { max-width: 75ch; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+
+/* header */
+header.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+.top-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; flex-wrap: wrap; }
+.brand { font-weight: 700; color: var(--brand-strong); margin-right: auto; }
+.theme-btn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 6px 10px; cursor: pointer; font: inherit; font-size: .85rem; }
+.levels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 0 0 12px; }
+.lvl { text-align: left; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 10px; padding: 8px 12px; cursor: pointer; font: inherit; transition: border-color .15s, background .15s; }
+.lvl b { display: block; font-size: .95rem; }
+.lvl span { display: block; font-size: .78rem; color: var(--muted); }
+.lvl .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-size: .75rem; font-weight: 700; color: var(--surface); margin-right: 6px; vertical-align: 1px; }
+.lvl[aria-pressed="true"] { border-width: 2px; padding: 7px 11px; background: var(--surface-2); }
+.lvl[data-l="1"] .n { background: var(--l1); } .lvl[data-l="1"][aria-pressed="true"] { border-color: var(--l1); }
+.lvl[data-l="2"] .n { background: var(--l2); } .lvl[data-l="2"][aria-pressed="true"] { border-color: var(--l2); }
+.lvl[data-l="3"] .n { background: var(--l3); } .lvl[data-l="3"][aria-pressed="true"] { border-color: var(--l3); }
+.lvl[data-l="4"] .n { background: var(--l4); } .lvl[data-l="4"][aria-pressed="true"] { border-color: var(--l4); }
+@media (max-width: 720px) { .levels { grid-template-columns: repeat(2, 1fr); } .lvl span { display: none; } }
+
+/* layout */
+.layout { display: grid; grid-template-columns: 230px 1fr; gap: 28px; padding: 24px 0 60px; }
+nav.toc { position: sticky; top: 150px; align-self: start; font-size: .88rem; max-height: calc(100vh - 170px); overflow-y: auto; }
+nav.toc .tt { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
+nav.toc a { display: block; color: var(--muted); text-decoration: none; padding: 4px 8px; border-left: 2px solid var(--border); }
+nav.toc a:hover, nav.toc a.active { color: var(--text); border-left-color: var(--brand); }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } nav.toc { display: none; } }
+
+.intro { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 22px; }
+.intro .who { color: var(--muted); font-size: .92rem; margin: 0; }
+.cum { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--muted); margin-top: 8px; }
+
+section.sec { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin-bottom: 18px; box-shadow: var(--shadow); scroll-margin-top: 160px; }
+section.sec[hidden] { display: none; }
+.tag { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; color: #fff; margin-bottom: 8px; }
+.tag { color: var(--surface); }
+.tag.l1 { background: var(--l1); } .tag.l2 { background: var(--l2); } .tag.l3 { background: var(--l3); } .tag.l4 { background: var(--l4); }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+.box { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--surface-2); }
+.box h4 { margin: 0 0 4px; font-size: .95rem; }
+.box p { margin: 0; font-size: .92rem; }
+.note { border-left: 3px solid var(--brand); background: var(--brand-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: .92rem; margin: 12px 0; }
+.note.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+.formula { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--code-bg); border-radius: 8px; padding: 10px 14px; font-size: .92rem; overflow-x: auto; }
+
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { background: var(--surface-2); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tbl { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+
+/* widgets */
+.widget { border: 1px dashed var(--brand); border-radius: 12px; padding: 14px 16px; margin: 14px 0; background: color-mix(in srgb, var(--brand-soft) 45%, var(--surface)); }
+.widget .wt { font-weight: 700; font-size: .95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.widget .wt::before { content: "▶"; font-size: .7rem; color: var(--brand); }
+.fields { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.fields label { display: flex; flex-direction: column; font-size: .8rem; color: var(--muted); gap: 3px; }
+.fields input[type="number"], .fields input[type="date"], .fields select, .fields input[type="text"] {
+  font: inherit; font-size: .92rem; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; min-width: 110px; }
+.check { display: flex; gap: 6px; align-items: center; font-size: .9rem; color: var(--text) !important; flex-direction: row !important; }
+.btn { font: inherit; font-size: .88rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: var(--surface); }
+.result { margin-top: 10px; font-size: .95rem; }
+.big { font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bars { display: flex; height: 22px; border-radius: 6px; overflow: hidden; margin: 8px 0 4px; background: var(--surface-2); }
+.bars div { transition: width .3s; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .82rem; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.warn { background: var(--warn-soft); color: var(--warn); } .pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.info { background: var(--brand-soft); color: var(--brand); }
+
+/* stepper */
+.steps { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; opacity: .45; transition: all .2s; }
+.step .dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .78rem; font-weight: 700; background: var(--surface-2); border: 1px solid var(--border); }
+.step.on { opacity: 1; border-color: var(--border); background: var(--surface); }
+.step.cur { border-color: var(--brand); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 25%, transparent); }
+.step.on .dot { background: var(--brand); color: var(--surface); border-color: var(--brand); }
+.step.skip { opacity: .3; text-decoration: line-through; }
+.step b { display: block; font-size: .93rem; }
+.step small { color: var(--muted); font-size: .84rem; }
+.ctl { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* glossary */
+dfn { font-style: normal; border-bottom: 1px dotted var(--brand); cursor: help; position: relative; }
+dfn:hover::after, dfn:focus::after { content: attr(data-tip); position: absolute; left: 0; top: 1.6em; z-index: 30; width: min(320px, 80vw); background: var(--text); color: var(--bg); font-size: .8rem; line-height: 1.4; padding: 8px 10px; border-radius: 8px; box-shadow: var(--shadow); white-space: normal; }
+
+details { border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; margin: 8px 0; background: var(--surface-2); }
+details summary { cursor: pointer; font-weight: 600; font-size: .93rem; }
+details[open] summary { margin-bottom: 6px; }
+svg text { font-family: system-ui, sans-serif; }
+.svgwrap { overflow-x: auto; }
+footer { color: var(--muted); font-size: .82rem; padding: 0 0 40px; }
+.hl { animation: flash 1.2s ease; }
+@keyframes flash { from { background: var(--warn-soft); } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">Náklady zákaziek – ako to funguje</div>
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="Prepnúť svetlý / tmavý režim">◐ Režim</button>
+    </div>
+    <div class="levels" role="group" aria-label="Úroveň podrobnosti">
+      <button class="lvl" data-l="1" aria-pressed="true"><b><span class="n">1</span>Základ</b><span>Pre každého – čo to robí a prečo</span></button>
+      <button class="lvl" data-l="2" aria-pressed="false"><b><span class="n">2</span>Používateľ</b><span>Každodenná práca v aplikácii</span></button>
+      <button class="lvl" data-l="3" aria-pressed="false"><b><span class="n">3</span>Pokročilý</b><span>Presné pravidlá a výpočty</span></button>
+      <button class="lvl" data-l="4" aria-pressed="false"><b><span class="n">4</span>Profesionál</b><span>Architektúra, API, dáta</span></button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="toc" aria-label="Obsah"><div class="tt">Na tejto úrovni</div><div id="tocList"></div></nav>
+  <main>
+    <div class="intro">
+      <h1 id="lvlTitle" style="margin:0 0 4px;font-size:1.6rem">Úroveň 1 – Základ</h1>
+      <p class="who" id="lvlWho"></p>
+      <label class="cum"><input type="checkbox" id="cumulative"> zobraziť aj obsah nižších úrovní</label>
+    </div>
+
+    <!-- ===================================================================== LEVEL 1 -->
+    <section class="sec" data-level="1" id="l1-co">
+      <span class="tag l1">Úroveň 1</span>
+      <h2>Čo aplikácia robí – jednou vetou</h2>
+      <p>Na otázku <b>„koľko nás zatiaľ stála zákazka X a koľko na nej zarábame?“</b> odpovie hneď a presne. Vedie sa v nej všetko, čo na zákazku stojí peniaze: hodiny ľudí, materiál z bločkov a faktúr a doprava autom.</p>
+      <div class="formula">Náklad zákazky = materiál (bločky + faktúry) + hodiny × nákladová sadzba + km × sadzba vozidla</div>
+      <p>Najväčšou položkou sú zvyčajne hodiny, po nich materiál. Aplikácia zvláda <b>viac firiem</b> (samostatné s.r.o.), ale vždy pracujete v jednej <dfn tabindex="0" data-tip="Firma zvolená v hlavičke. Všetky doklady, zákazky, náklady, DPH aj banka, ktoré vidíte, patria len jej. Medzi firmami náklady nikdy neprechádzajú.">aktívnej firme</dfn>, ktorú zvolíte hore v hlavičke.</p>
+      <div class="grid3">
+        <div class="box"><h4>👷 Hodiny</h4><p>Kto, kedy, na ktorej zákazke a koľko hodín robil.</p></div>
+        <div class="box"><h4>🧾 Doklady</h4><p>Bločky a faktúry: aplikácia ich prečíta sama a vy ich len skontrolujete.</p></div>
+        <div class="box"><h4>🚐 Jazdy</h4><p>Ktoré auto a kam išlo. Náklad sa počíta z km, nie z tankovania.</p></div>
+      </div>
+    </section>
+
+    <section class="sec" data-level="1" id="l1-den">
+      <span class="tag l1">Úroveň 1</span>
+      <h2>Jeden deň s aplikáciou</h2>
+      <p>Klikajte na „Ďalej“ a uvidíte, ako sa z bežného pracovného dňa stane presné číslo na zákazke.</p>
+      <div class="widget">
+        <div class="wt">Príbeh dňa na zákazke Sikorky</div>
+        <div class="steps" id="dayStory"></div>
+        <div class="ctl"><button class="btn" data-day="-1">← Späť</button><button class="btn primary" data-day="1">Ďalej →</button><button class="btn" data-day="0">Od začiatku</button><span id="dayInfo" style="color:var(--muted);font-size:.85rem"></span></div>
+      </div>
+    </section>
+
+    <section class="sec" data-level="1" id="l1-kalk">
+      <span class="tag l1">Úroveň 1</span>
+      <h2>Vyskúšajte si: koľko stojí zákazka</h2>
+      <p>Zadajte čísla a hneď uvidíte, z čoho sa náklad skladá. Aplikácia počíta rovnako, len automaticky a za všetky dni naraz.</p>
+      <div class="widget">
+        <div class="wt">Kalkulačka nákladu zákazky</div>
+        <div class="fields">
+          <label>Odpracované hodiny<input type="number" id="k-h" value="40" min="0" step="0.25"></label>
+          <label>Nákladová sadzba €/h<input type="number" id="k-r" value="14" min="0" step="0.5"></label>
+          <label>Materiál bez DPH €<input type="number" id="k-m" value="350" min="0" step="1"></label>
+          <label>Vzdialenosť jedným smerom (km)<input type="number" id="k-d" value="25" min="0" step="1"></label>
+          <label>Počet jázd<input type="number" id="k-t" value="5" min="0" step="1"></label>
+          <label>Sadzba auta €/km<input type="number" id="k-v" value="0.35" min="0" step="0.05"></label>
+        </div>
+        <div class="result">
+          <div>Náklad spolu: <span class="big" id="k-total"></span></div>
+          <div class="bars" id="k-bars"></div>
+          <div class="legend"><span><i style="background:var(--l1)"></i>Práca</span><span><i style="background:var(--l2)"></i>Materiál</span><span><i style="background:var(--l3)"></i>Doprava</span></div>
+          <p id="k-explain" style="font-size:.9rem;color:var(--muted);margin:.5em 0 0"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" data-level="1" id="l1-principy">
+      <span class="tag l1">Úroveň 1</span>
+      <h2>Päť pravidiel, na ktorých to stojí</h2>
+      <div class="grid2">
+        <div class="box"><h4>1. Človek má posledné slovo</h4><p>Každý automaticky načítaný doklad čaká v stave <b>Na kontrolu</b>, kým ho nepotvrdíte. Do prehľadov sa započítajú len potvrdené doklady.</p></div>
+        <div class="box"><h4>2. Najprv istota, potom umelá inteligencia</h4><p>Čo sa dá spočítať presne (QR kód bločku, súčty, párovanie banky), počíta program. AI číta len to, čo treba vyčítať z obrázka.</p></div>
+        <div class="box"><h4>3. Nič sa nezapisuje dvakrát</h4><p>Rovnaký bloček poslaný dvakrát nevytvorí druhý záznam. Aplikácia len zistí, že ho už máte.</p></div>
+        <div class="box"><h4>4. Nič sa nemaže</h4><p>Zákazky, ľudia a autá sa len <b>deaktivujú</b>. Zo zoznamov zmiznú, ale história na nich ostane.</p></div>
+        <div class="box"><h4>5. Firmy sú oddelené</h4><p>Náklad ani výnos nikdy neprejde do inej firmy. Každá firma má aj vlastnú <dfn tabindex="0" data-tip="Špeciálna zákazka každej firmy pre náklady, ktoré nepatria konkrétnej zákazke: telefóny, nájom, tankovanie, servis áut, PZP, diaľničné známky…">Réžiu</dfn>.</p></div>
+        <div class="box"><h4>Čas a čísla po slovensky</h4><p>Čas v 24-hodinovom formáte (nikde AM/PM), dátumy DD.MM.RRRR, desatinná čiarka, mena €.</p></div>
+      </div>
+    </section>
+
+    <section class="sec" data-level="1" id="l1-kto">
+      <span class="tag l1">Úroveň 1</span>
+      <h2>Kto čo vidí</h2>
+      <div class="tbl"><table>
+        <tr><th>Rola</th><th>Čo robí</th><th>Čo nevidí</th></tr>
+        <tr><td><b>Admin / klient</b></td><td>Všetko: doklady, sadzby, ziskovosť, fakturácia, banka, nastavenia.</td><td>–</td></tr>
+        <tr><td><b>Pracovník</b></td><td>Zadáva svoje hodiny a jazdy, vidí svoj podklad (koľko hodín a akú sumu fakturuje firme).</td><td>Sadzby iných, fakturačné sadzby, ziskovosť, doklady, banku.</td></tr>
+      </table></div>
+    </section>
+
+    <!-- ===================================================================== LEVEL 2 -->
+    <section class="sec" data-level="2" id="l2-mapa">
+      <span class="tag l2">Úroveň 2</span>
+      <h2>Mapa aplikácie</h2>
+      <p>Menu je rozdelené do pevných skupín. Kliknite na skupinu a zobrazí sa, na čo slúži.</p>
+      <div class="widget">
+        <div class="wt">Navigácia</div>
+        <div class="ctl" id="navBtns"></div>
+        <div class="box" id="navDetail" style="margin-top:10px"></div>
+      </div>
+    </section>
+
+    <section class="sec" data-level="2" id="l2-doklady">
+      <span class="tag l2">Úroveň 2</span>
+      <h2>Ako sa spracuje bloček alebo faktúra</h2>
+      <ol>
+        <li><b>Doklad príde:</b> nahráte ho (aj viac naraz, aj potiahnutím myšou), vloží sa do Google Drive priečinka „na spracovanie“, alebo príde e-mailom na plus-adresu (napr. <code>meno+firma1-faktury@gmail.com</code>).</li>
+        <li><b>Spracovanie:</b> automaticky denne o 20:00, alebo hneď po nahratí či tlačidlom „Spracovať inbox teraz“.</li>
+        <li><b>Načítanie údajov:</b> bloček podľa QR kódu z eKasy (Finančná správa), inak ho prečíta Claude API. Pri každom doklade vidno, čo fungovalo.</li>
+        <li><b>Návrh zákazky:</b> z poznámky na doklade, z názvu súboru (napr. <code>sikorky_blocek.jpg</code>), z histórie dodávateľa alebo od AI. Tankovanie a opakujúce sa faktúry sa navrhnú do Réžie.</li>
+        <li><b>Vaša kontrola:</b> v sekcii <b>Doklady → Na kontrolu</b> doklad otvoríte, opravíte, rozdelíte a stlačíte <b>Potvrdiť a ďalší</b>.</li>
+      </ol>
+      <h3>Rozdelenie dokladu na zákazky</h3>
+      <div class="grid3">
+        <div class="box"><h4>Celý doklad → 1 zákazka</h4><p>Najčastejší prípad (default).</p></div>
+        <div class="box"><h4>Zmiešaný doklad</h4><p>Každá položka na inú zákazku tej istej firmy.</p></div>
+        <div class="box"><h4>Rozdeliť rovnomerne</h4><p>Jedna položka (napr. lepiaca páska) sa rozdelí na viac zákaziek. Súčet sa musí rovnať sume položky.</p></div>
+      </div>
+      <div class="widget">
+        <div class="wt">Vyskúšajte „Rozdeliť rovnomerne“</div>
+        <div class="fields">
+          <label>Suma položky s DPH €<input type="number" id="s-amt" value="10" min="0" step="0.01"></label>
+          <label>Počet zákaziek<input type="number" id="s-n" value="3" min="1" max="10" step="1"></label>
+        </div>
+        <div class="result" id="s-out"></div>
+      </div>
+    </section>
+
+    <section class="sec" data-level="2" id="l2-original">
+      <span class="tag l2">Úroveň 2</span>
+      <h2>Fyzický originál bločku</h2>
+      <p>Pracovník bloček odfotí hneď pri nákupe, ale papier príde aj o dva mesiace neskôr. Aplikácia preto sleduje <b>tri stavy</b>:</p>
+      <div class="widget">
+        <div class="wt">Kliknite na situáciu</div>
+        <div class="ctl" id="origBtns">
+          <button class="btn" data-o="a">Mám fotku aj papier</button>
+          <button class="btn" data-o="b">Mám len fotku od pracovníka</button>
+          <button class="btn" data-o="c">Naskenoval som papier, fotka neprišla</button>
+        </div>
+        <div class="result" id="origOut"></div>
+      </div>
+      <p><b>Rýchla kontrola bločku</b> (aj z mobilu): odfotíte QR kód a aplikácia povie „Už máš – prišiel vtedy a vtedy“ a hneď ho označí ako fyzicky založený. Elektronické doklady (PDF s textom, e-mail) papierový originál nepotrebujú.</p>
+    </section>
+
+    <section class="sec" data-level="2" id="l2-hodiny">
+      <span class="tag l2">Úroveň 2</span>
+      <h2>Hodiny a jazdy</h2>
+      <div class="grid2">
+        <div class="box"><h4>Hodiny</h4><p>Dátum, pracovník, zákazka, čas od–do (24 h) alebo priamo počet hodín, popis práce, „nakúpený materiál“ a „fakturovať zákazníkovi“ (napr. oprava vlastnej chyby = nie). Rýchle zadanie si pamätá dátum, pracovníka a zákazku pre ďalší záznam; Ctrl + Enter uloží.</p></div>
+        <div class="box"><h4>Jazdy</h4><p>Jedna jazda = jedno auto, bez ohľadu na počet ľudí v ňom. Jazdu eviduje vodič, posádka je len informácia. Ak km nezadáte, dopočítajú sa zo vzdialenosti zákazky.</p></div>
+      </div>
+      <div class="widget">
+        <div class="wt">Čas od–do na hodiny (24 h)</div>
+        <div class="fields">
+          <label>Od (HH:MM)<input type="text" id="h-from" value="07:00" maxlength="5"></label>
+          <label>Do (HH:MM)<input type="text" id="h-to" value="15:30" maxlength="5"></label>
+          <label>Zaokrúhlenie (h)<select id="h-round"><option value="0">bez</option><option value="0.25" selected>0,25</option><option value="0.5">0,5</option></select></label>
+        </div>
+        <div class="result" id="h-out"></div>
+      </div>
+      <div class="note">Ak pri hodinách zaškrtnete „nakúpený materiál“ a do 7 dní (parameter) k tej zákazke a dňu nepríde bloček ani faktúra, mesačná kontrola vás upozorní.</div>
+    </section>
+
+    <section class="sec" data-level="2" id="l2-tabulky">
+      <span class="tag l2">Úroveň 2</span>
+      <h2>Tabuľky, ktoré si prispôsobíte</h2>
+      <p>Každý zoznam v aplikácii je rovnaká inteligentná tabuľka:</p>
+      <div class="grid3">
+        <div class="box"><h4>Stĺpce</h4><p>Vyberiete z <i>všetkých</i> polí, aj z naviazaných (napr. odberateľ pri hodinách). Poradie meníte ťahaním, šírku ťahaním okraja.</p></div>
+        <div class="box"><h4>Triedenie a filtre</h4><p>Klik = triedenie, Shift + klik = viac úrovní. Filtre podľa typu: text, od–do, „tento mesiac“, výber hodnôt, áno/nie.</p></div>
+        <div class="box"><h4>Súčty a skupiny</h4><p>Súčty v pätičke sú za <i>všetky</i> vyfiltrované riadky. Zoskupenie (napr. podľa zákazky) so súčtami skupín.</p></div>
+        <div class="box"><h4>Pohľady</h4><p>Nastavenie uložíte pod menom („Sikorky – materiál tento mesiac“), môže byť predvolené. Pamätá sa na serveri, takže funguje na PC aj mobile.</p></div>
+        <div class="box"><h4>Export</h4><p>XLSX alebo CSV presne podľa aktuálnych stĺpcov, filtrov a triedenia.</p></div>
+        <div class="box"><h4>Hromadné akcie</h4><p>Označíte riadky a naraz ich potvrdíte, priradíte zákazku alebo označíte fyzický originál.</p></div>
+      </div>
+    </section>
+
+    <section class="sec" data-level="2" id="l2-fakt">
+      <span class="tag l2">Úroveň 2</span>
+      <h2>Fakturácia zákazníkovi a podklad pre pracovníka</h2>
+      <p><b>Podklad k fakturácii</b> pozbiera za zákazku a obdobie všetko ešte nevyfakturované: fakturovateľné hodiny × fakturačná sadzba, materiál s prirážkou a dopravu (ak sa pri zákazke fakturuje).</p>
+      <div class="widget">
+        <div class="wt">Životný cyklus podkladu</div>
+        <div class="ctl"><span>Stav:</span> <span class="pill info" id="b-state">Žiadny podklad</span></div>
+        <div class="ctl" style="margin-top:8px">
+          <button class="btn" id="b-create">Vytvoriť podklad</button>
+          <button class="btn" id="b-close" disabled>Uzavrieť</button>
+          <button class="btn" id="b-link" disabled>Naviazať vystavenú faktúru</button>
+          <button class="btn" id="b-open" disabled>Otvoriť</button>
+        </div>
+        <p class="result" id="b-text" style="font-size:.92rem"></p>
+      </div>
+      <p><b>Podklad pre pracovníka</b>: hodiny po dňoch a zákazkách × nákladová sadzba. Živnostník z neho vie, koľko fakturuje firme; pri zamestnancovi je to podklad k mzde. Pracovník ho vidí vo svojom účte, admin ho exportuje do PDF alebo XLSX.</p>
+    </section>
+
+    <section class="sec" data-level="2" id="l2-kontrola">
+      <span class="tag l2">Úroveň 2</span>
+      <h2>Mesačná kontrola – čo treba dorobiť</h2>
+      <p>Jedna obrazovka, kde vidíte, čo v mesiaci chýba:</p>
+      <ul>
+        <li>chýbajúce povinné faktúry (Orange, Telekom, nájom…),</li>
+        <li>bločky bez fyzického originálu a doklady čakajúce na kontrolu,</li>
+        <li>hlásený nákup materiálu bez dokladu a neúplné záznamy hodín,</li>
+        <li>bankové pohyby bez dokladu, faktúry po splatnosti a nezhody v sume,</li>
+        <li>vozový park: STK, EK, PZP, diaľničná známka a servis,</li>
+        <li>súbory, ktoré sa nepodarilo spracovať.</li>
+      </ul>
+    </section>
+
+    <!-- ===================================================================== LEVEL 3 -->
+    <section class="sec" data-level="3" id="l3-sadzby">
+      <span class="tag l3">Úroveň 3</span>
+      <h2>Ako sa hľadá sadzba pracovníka</h2>
+      <p>Nákladová a fakturačná sadzba sa hľadajú <b>každá zvlášť</b> v tomto poradí. Použije sa prvá úroveň, ktorá má danú sadzbu vyplnenú a platnú k dátumu práce (pri viacerých platných sadzbách tá s najnovším „platí od“):</p>
+      <div class="formula">1. pracovník + zákazka  →  2. pracovník + firma  →  3. default pracovníka</div>
+      <div class="widget">
+        <div class="wt">Simulátor hľadania sadzby</div>
+        <div class="tbl"><table id="rateTbl">
+          <tr><th>Úroveň</th><th>Existuje</th><th class="num">Nákladová €/h</th><th class="num">Fakturačná €/h</th><th>Platí od</th><th>Platí do</th></tr>
+        </table></div>
+        <div class="fields" style="margin-top:10px"><label>Dátum práce<input type="date" id="r-date" value="2026-11-04"></label><label>Hodiny<input type="number" id="r-h" value="8" step="0.25"></label></div>
+        <div class="result" id="rateOut"></div>
+      </div>
+      <h3>Snapshot (zafixovanie) sadzieb</h3>
+      <p>Pri uložení hodín sa nájdená sadzba <b>zapíše priamo k záznamu</b> spolu s vypočítaným nákladom a fakturovateľnou hodnotou. Neskoršia zmena sadzby už uložené ani vyfakturované obdobie neprepíše. Sadzba sa znovu vyhľadá len vtedy, keď zmeníte pracovníka, zákazku alebo dátum, alebo keď vedome spustíte <b>Prepočítať sadzby</b> (zapíše sa do audit logu). Záznamy v uzavretom podklade sa neprepočítajú nikdy.</p>
+    </section>
+
+    <section class="sec" data-level="3" id="l3-km">
+      <span class="tag l3">Úroveň 3</span>
+      <h2>Doprava: km a sadzba vozidla</h2>
+      <div class="formula">km = zadané km, ak sú vyplnené; inak 2 × vzdialenosť zákazky × (1 + prirážka/100), zaokrúhlené na 0,1 km<br>náklad = km × sadzba vozidla platná k dátumu jazdy (snapshot)<br>fakturovateľná hodnota = km × fakturačná sadzba dopravy zákazky (len ak zákazka „fakturuje dopravu“)</div>
+      <div class="widget">
+        <div class="wt">Výpočet jazdy</div>
+        <div class="fields">
+          <label>Vzdialenosť jedným smerom<input type="number" id="t-d" value="25"></label>
+          <label>Prirážka % (parameter)<input type="number" id="t-p" value="10"></label>
+          <label>Zadané km (prázdne = dopočítať)<input type="number" id="t-km" placeholder="—"></label>
+          <label>Sadzba vozidla €/km<input type="number" id="t-r" value="0.35" step="0.01"></label>
+        </div>
+        <div class="result" id="t-out"></div>
+      </div>
+      <div class="note">Tankovanie, servis, PZP a diaľničné známky sa <b>nepriraďujú zákazkám</b>, pretože sú už v sadzbe €/km. Inak by sa náklad započítal dvakrát. Bločky z čerpacích staníc sa preto automaticky navrhnú do Réžie (podľa kľúčových slov: slovnaft, omv, shell, orlen, lukoil, mol, nafta, diesel, benzín…).</div>
+    </section>
+
+    <section class="sec" data-level="3" id="l3-pipeline">
+      <span class="tag l3">Úroveň 3</span>
+      <h2>Spracovanie dokladu krok za krokom</h2>
+      <p>Zvoľte situáciu a sledujte presnú cestu dokladu. Takto postupuje modul <code>ingest</code>.</p>
+      <div class="widget">
+        <div class="wt">Simulátor spracovania</div>
+        <div class="fields">
+          <label class="check"><input type="checkbox" id="p-pdf"> PDF s textovou vrstvou (e-shop)</label>
+          <label class="check"><input type="checkbox" id="p-qr" checked> QR kód s ID eKasa je čitateľný</label>
+          <label class="check"><input type="checkbox" id="p-ek" checked> eKasa odpovie</label>
+          <label class="check"><input type="checkbox" id="p-cl" checked> Claude API je nastavené</label>
+          <label class="check"><input type="checkbox" id="p-dup"> Doklad už v databáze je</label>
+          <label class="check"><input type="checkbox" id="p-fuel"> Je to čerpacia stanica</label>
+        </div>
+        <div class="steps" id="pipe"></div>
+        <div class="ctl"><button class="btn primary" id="p-play">▶ Prehrať</button><button class="btn" id="p-all">Ukázať všetko</button></div>
+      </div>
+      <h3>Návrh zákazky – presné poradie</h3>
+      <ol>
+        <li>ručná poznámka na doklade (vyčítaná AI), poznámka pri nahratí, názov súboru – hľadá sa názov alebo alias aktívnej zákazky (najdlhšia zhoda),</li>
+        <li>prijatá faktúra od dodávateľa z „Opakujúcich sa faktúr“ → Réžia,</li>
+        <li>dodávateľ alebo všetky položky obsahujú kľúčové slovo Réžie (tankovanie) → Réžia,</li>
+        <li>návrh AI zo zoznamu zákaziek firmy,</li>
+        <li>história dodávateľa: zákazka, na ktorú sa jeho potvrdené doklady (podľa IČO) priraďovali najčastejšie,</li>
+        <li>vystavená faktúra: číselný rad podľa najdlhšej zhodnej predpony čísla → zákazka radu,</li>
+        <li>inak upozornenie „Zákazku sa nepodarilo určiť“.</li>
+      </ol>
+      <h3>Duplicity</h3>
+      <div class="tbl"><table>
+        <tr><th>Poradie</th><th>Pravidlo</th></tr>
+        <tr><td>0</td><td>Rovnaký súbor (SHA-256 hash) v rovnakej firme sa neuloží ani nespracuje druhýkrát.</td></tr>
+        <tr><td>1</td><td>Rovnaké ID eKasa (<code>O-</code> + 32 hex znakov). Kontroluje sa <b>pred</b> volaním eKasy aj Claude.</td></tr>
+        <tr><td>2</td><td>Faktúra: rovnaké číslo + IČO dodávateľa + typ dokladu.</td></tr>
+        <tr><td>3</td><td>Záložne: IČO + dátum + suma s DPH a čas v tolerancii ±2 min (parameter).</td></tr>
+      </table></div>
+      <p>Duplicita nevytvorí nový doklad. Súbor sa pripojí k existujúcemu a ak ide o sken papiera, doklad sa označí ako fyzicky založený.</p>
+      <h3>Kontroly a upozornenia na doklade</h3>
+      <ul>
+        <li>súčet položiek ≠ suma dokladu, alebo základ + DPH ≠ suma s DPH (tolerancia 0,02 €),</li>
+        <li>IČO odberateľa na doklade ≠ IČO aktívnej firmy,</li>
+        <li>dodávateľom je naša firma → doklad sa preradí na vystavenú faktúru,</li>
+        <li>potvrdenie vyžaduje dátum, sumu a priradenie, ktorého súčet sa rovná sume dokladu, resp. každej položky (±0,02 €).</li>
+      </ul>
+    </section>
+
+    <section class="sec" data-level="3" id="l3-zisk">
+      <span class="tag l3">Úroveň 3</span>
+      <h2>Náklady, výnosy, zisk a rozpracovanosť</h2>
+      <div class="tbl"><table>
+        <tr><th>Veličina</th><th>Presný výpočet</th></tr>
+        <tr><td>Materiál</td><td>Súčet nákladových priradení <b>potvrdených</b> dokladov (bločky a prijaté faktúry). Platiteľ DPH počíta <b>bez DPH</b>, neplatiteľ s DPH. Obdobie sa určuje podľa dátumu dokladu.</td></tr>
+        <tr><td>Práca</td><td>Σ zafixovaný náklad hodín (hodiny × nákladová sadzba).</td></tr>
+        <tr><td>Doprava</td><td>Σ zafixovaný náklad jázd (km × sadzba vozidla).</td></tr>
+        <tr><td>Výnos</td><td>Výnosové priradenia potvrdených <b>vystavených faktúr</b> (bez DPH u platiteľa).</td></tr>
+        <tr><td>Zisk, marža</td><td>Zisk = výnos − (materiál + práca + doprava); marža = zisk / výnos.</td></tr>
+        <tr><td>Rozpracovanosť</td><td>Nevyfakturované fakturovateľné hodiny × fakturačná sadzba + nevyfakturovaný potvrdený materiál × (1 + prirážka) + nevyfakturovaná doprava (ak sa fakturuje). Pri pevnej cene je 0.</td></tr>
+        <tr><td>Očakávaný zisk</td><td>Zisk + rozpracovanosť.</td></tr>
+        <tr><td>Pevná cena</td><td>Odhad zisku = zmluvná cena − doterajšie náklady.</td></tr>
+        <tr><td>Firma spolu</td><td>Σ zisky zákaziek − náklady Réžie. Rozpočítanie Réžie podľa hodín alebo nákladov je len zobrazenie, nič sa nezapisuje.</td></tr>
+      </table></div>
+      <div class="widget">
+        <div class="wt">Kalkulačka ziskovosti zákazky</div>
+        <div class="fields">
+          <label>Vyfakturované (výnos) €<input type="number" id="z-rev" value="5000"></label>
+          <label>Náklady spolu €<input type="number" id="z-cost" value="3800"></label>
+          <label>Nevyfakt. hodiny<input type="number" id="z-h" value="20"></label>
+          <label>Fakturačná sadzba €/h<input type="number" id="z-br" value="25"></label>
+          <label>Nevyfakt. materiál €<input type="number" id="z-m" value="200"></label>
+          <label>Prirážka %<input type="number" id="z-mk" value="10"></label>
+        </div>
+        <div class="result" id="z-out"></div>
+      </div>
+    </section>
+
+    <section class="sec" data-level="3" id="l3-banka">
+      <span class="tag l3">Úroveň 3</span>
+      <h2>Párovanie bankových pohybov</h2>
+      <p>Výpis (CAMT.053, CSV, XLSX, alebo PDF cez Claude) sa podľa <b>IBAN</b> priradí firme. Ak IBAN nepatrí aktívnej firme, výpis sa nespracuje. Pohyby sa deduplikujú (dátum, suma, referencia banky, VS, protistrana, správa), takže prekrývajúce sa výpisy nevadia. Najprv sa použijú <b>pravidlá</b> (napr. „poplatok“ → nepotrebuje doklad), potom sa deterministicky párujú:</p>
+      <ul>
+        <li><b>výdavok</b> ↔ prijatá faktúra alebo bloček; <b>príjem</b> ↔ vystavená faktúra,</li>
+        <li>kandidát: neuhradený doklad s dátumom od −120 dní do +5 dní (parameter) od pohybu; bloček musí byť v tolerancii ±5 dní,</li>
+        <li>kandidát musí mať skóre ≥ 30 a zhodnú sumu alebo VS.</li>
+      </ul>
+      <div class="widget">
+        <div class="wt">Bodovací simulátor</div>
+        <div class="fields">
+          <label class="check"><input type="checkbox" id="m-vs" checked> VS = VS / číslo faktúry (+60)</label>
+          <label class="check"><input type="checkbox" id="m-amt" checked> Suma sedí (+30)</label>
+          <label class="check"><input type="checkbox" id="m-iban"> IBAN protistrany sedí (+25)</label>
+          <label class="check"><input type="checkbox" id="m-name"> Názov protistrany sedí (+15)</label>
+          <label class="check"><input type="checkbox" id="m-date" checked> Dátum v tolerancii (+10)</label>
+          <label class="check"><input type="checkbox" id="m-uniq" checked> Jediný najlepší kandidát</label>
+        </div>
+        <div class="result" id="m-out"></div>
+      </div>
+      <p>Úhrada dokladu sa počíta z potvrdených párovaní: <span class="pill bad">neuhradená</span> → <span class="pill warn">čiastočne</span> → <span class="pill ok">uhradená</span> (ak uhradené + 0,01 € ≥ suma). LLM pri párovaní nerozhoduje.</p>
+    </section>
+
+    <section class="sec" data-level="3" id="l3-upozornenia">
+      <span class="tag l3">Úroveň 3</span>
+      <h2>Upozornenia a parametre</h2>
+      <div class="tbl"><table>
+        <tr><th>Upozornenie</th><th>Kedy vznikne</th></tr>
+        <tr><td>Chýba povinná faktúra</td><td>Mesačná: žiadna prijatá faktúra v mesiaci. Štvrťročná: kontroluje sa v mesiacoch 3, 6, 9, 12 za celý štvrťrok. Ročná: v decembri za celý rok. Zhoda podľa pravidla, IČO alebo textu v názve dodávateľa.</td></tr>
+        <tr><td>Nákup materiálu bez dokladu</td><td>Hodiny s „nakúpený materiál“ staršie ako 7 dní, bez bločku alebo faktúry priradenej k zákazke s dátumom ±1 deň.</td></tr>
+        <tr><td>Vozový park</td><td>STK, EK, PZP (najneskoršia zmluva), SK známka: prekročené alebo do 30 dní; chýba evidencia. Servis: termín do 30 dní alebo km do 1 000 km od plánovaného stavu.</td></tr>
+        <tr><td>Neúplné hodiny</td><td>Chýba zákazka, alebo sa nedajú určiť hodiny (chýba od alebo do a hodiny nie sú zadané).</td></tr>
+      </table></div>
+      <h3>Parametre (Nastavenia → Parametre)</h3>
+      <p>Každý parameter má default, globálnu hodnotu a voliteľne hodnotu pre konkrétnu firmu (firemná prepíše globálnu).</p>
+      <div class="tbl"><table id="paramTbl"><tr><th>Parameter</th><th class="num">Default</th></tr></table></div>
+    </section>
+
+    <!-- ===================================================================== LEVEL 4 -->
+    <section class="sec" data-level="4" id="l4-arch">
+      <span class="tag l4">Úroveň 4</span>
+      <h2>Architektúra</h2>
+      <p>Jeden backend (FastAPI) s PostgreSQL ako jediným zdrojom pravdy. Všetky vstupy sú samostatné adaptéry, ktoré zapisujú cez služby jadra. Frontend (React + TypeScript) je statická aplikácia servírovaná tým istým procesom.</p>
+      <div class="svgwrap">
+      <svg viewBox="0 0 900 360" width="100%" style="min-width:680px" role="img" aria-label="Diagram architektúry">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+        <g font-size="12">
+          <text x="20" y="22" fill="var(--muted)" font-weight="700">VSTUPY (adaptéry)</text>
+          <g id="in"></g>
+          <text x="345" y="22" fill="var(--muted)" font-weight="700">JADRO</text>
+          <rect x="330" y="35" width="250" height="300" rx="12" fill="var(--surface-2)" stroke="var(--brand)"/>
+          <text x="345" y="60" fill="var(--text)" font-weight="700">FastAPI – REST /api</text>
+          <text x="345" y="82" fill="var(--muted)">registry · routers · services</text>
+          <rect x="345" y="95" width="220" height="44" rx="8" fill="var(--surface)" stroke="var(--border)"/><text x="355" y="121" fill="var(--text)">ingest · calc · documents · bank</text>
+          <rect x="345" y="147" width="220" height="44" rx="8" fill="var(--surface)" stroke="var(--border)"/><text x="355" y="173" fill="var(--text)">billing · reports · vehicle_check</text>
+          <rect x="345" y="199" width="220" height="44" rx="8" fill="var(--surface)" stroke="var(--border)"/><text x="355" y="225" fill="var(--text)">scheduler (APScheduler, 20:00)</text>
+          <rect x="345" y="262" width="220" height="56" rx="8" fill="var(--brand-soft)" stroke="var(--brand)"/><text x="355" y="286" fill="var(--text)" font-weight="700">PostgreSQL 16</text><text x="355" y="305" fill="var(--muted)">+ úložisko súborov (sha256)</text>
+          <text x="640" y="22" fill="var(--muted)" font-weight="700">VÝSTUPY</text>
+          <g id="out"></g>
+        </g>
+      </svg></div>
+      <div class="tbl" style="margin-top:12px"><table>
+        <tr><th>Časť</th><th>Technológia</th></tr>
+        <tr><td>Backend</td><td>Python 3.12, FastAPI, SQLAlchemy 2, Alembic, psycopg 3, PyJWT, bcrypt</td></tr>
+        <tr><td>Doklady</td><td>pypdf (text), pypdfium2 (render PDF), OpenCV (QR), Pillow + pillow-heif (iPhone HEIC), Anthropic SDK</td></tr>
+        <tr><td>Výstupy</td><td>openpyxl (XLSX), reportlab (PDF, písmo DejaVu kvôli diakritike)</td></tr>
+        <tr><td>Frontend</td><td>React 18, TypeScript, Vite, TanStack Table + Query, Tailwind CSS, lucide ikony</td></tr>
+        <tr><td>Prevádzka</td><td>Docker Compose: <code>db</code>, <code>app</code>, <code>scheduler</code>; voliteľne <code>caddy</code> (HTTPS) alebo <code>cloudflared</code> (tunel)</td></tr>
+      </table></div>
+    </section>
+
+    <section class="sec" data-level="4" id="l4-registry">
+      <span class="tag l4">Úroveň 4</span>
+      <h2>Register polí a univerzálny zoznamový engine</h2>
+      <p>Každá entita je v <code>backend/app/registry/entities.py</code> opísaná objektom <code>Entity</code> so zoznamom polí <code>F</code>: kľúč, slovenský popis, typ (<code>text, longtext, number, money, hours, date, time, datetime, select, bool, ref, multiref</code>), SQL výraz, či sa dá triediť a filtrovať, či je vypočítané, ktoré roly ho vidia a upravujú, väzby (<code>ref</code>) a pomocníka. Z toho istého opisu vzniká:</p>
+      <ul>
+        <li><code>GET /api/meta/{entita}/fields</code> – polia pre rolu (frontend z nich kreslí stĺpce, filtre aj formuláre),</li>
+        <li><code>GET /api/data/{entita}</code> – stránkovanie, triedenie, filtre, fulltext, súčty a skupiny priamo v SQL,</li>
+        <li><code>GET /api/data/{entita}/export</code> – XLSX/CSV, <code>POST/PATCH/DELETE</code> – generické CRUD s audit logom a hookmi <code>before_save</code>/<code>after_save</code>,</li>
+        <li><code>POST /api/data/{entita}/actions/{akcia}</code> – hromadné akcie, <code>GET /api/options/{entita}</code> – výberové polia, <code>GET /api/history/…</code> – história.</li>
+      </ul>
+      <div class="widget">
+        <div class="wt">Zostavte si požiadavku na API</div>
+        <div class="fields">
+          <label>Entita<select id="a-ent"></select></label>
+          <label>Triediť<select id="a-sort"></select></label>
+          <label>Smer<select id="a-dir"><option value="desc">zostupne</option><option value="asc">vzostupne</option></select></label>
+          <label>Filter dátumu od<input type="date" id="a-from" value="2026-11-01"></label>
+          <label>do<input type="date" id="a-to" value="2026-11-30"></label>
+          <label>Zoskupiť<select id="a-group"></select></label>
+          <label>Hľadať<input type="text" id="a-q" placeholder="napr. Sikorky"></label>
+        </div>
+        <pre id="a-out" style="margin-top:10px"></pre>
+      </div>
+      <div class="note"><b>Nové pole v UI bez zmeny frontendu:</b> 1) stĺpec v modeli (<code>app/models</code>), 2) <code>alembic revision --autogenerate</code> + <code>alembic upgrade head</code>, 3) <code>F("kluc", "Popis", "typ")</code> v registri. Frontend ho hneď ponúkne vo výbere stĺpcov, filtroch, exporte aj vo formulári.</div>
+    </section>
+
+    <section class="sec" data-level="4" id="l4-data">
+      <span class="tag l4">Úroveň 4</span>
+      <h2>Dátový model</h2>
+      <p>Všetky entity okrem globálnych (pracovník, používateľ) majú <code>company_id</code>. Číselníky majú <code>active</code>. Kľúčová je <code>allocation</code>, ktorá jedným mechanizmom rieši celý doklad, položky aj rozdelenie, a to pre náklady aj výnosy.</p>
+      <div class="widget">
+        <div class="wt">Kliknite na entitu</div>
+        <div class="ctl" id="entBtns"></div>
+        <div class="box" id="entDetail" style="margin-top:10px"></div>
+      </div>
+    </section>
+
+    <section class="sec" data-level="4" id="l4-sec">
+      <span class="tag l4">Úroveň 4</span>
+      <h2>Bezpečnosť a prístup</h2>
+      <div class="tbl"><table>
+        <tr><th>Téma</th><th>Riešenie</th></tr>
+        <tr><td>Prihlásenie</td><td>E-mail + heslo (bcrypt). JWT HS256 v httpOnly cookie <code>session</code> (SameSite=Lax, 14 dní, <code>Secure</code> pri <code>COOKIE_SECURE=true</code>).</td></tr>
+        <tr><td>CSRF</td><td>Každá požiadavka okrem GET musí mať hlavičku <code>X-Requested-With: app</code>; cudzí formulár ju nastaviť nevie.</td></tr>
+        <tr><td>Aktívna firma</td><td>Hlavička <code>X-Company-Id</code> (pri odkazoch na export parameter <code>_company</code>), inak naposledy zvolená firma. Server overí prístup používateľa k firme; admin bez vybraných firiem má prístup ku všetkým.</td></tr>
+        <tr><td>Riadky</td><td>Pracovník: len hodiny s vlastným <code>worker_id</code>, jazdy kde je vodič alebo autor. Polia sú filtrované podľa roly už v registri (napr. fakturačná sadzba len admin).</td></tr>
+        <tr><td>Uzamknutie</td><td>Hodiny, jazdy a priradenia v uzavretom podklade k fakturácii sa nedajú meniť ani mazať (HTTP 409).</td></tr>
+        <tr><td>Audit</td><td>Každá zmena cez API sa zapíše do <code>audit_log</code> (kto, kedy, entita, pole, stará a nová hodnota), vrátane prepočtov a párovaní.</td></tr>
+        <tr><td>Súbory</td><td>Ukladajú sa mimo DB pod <code>STORAGE_DIR/{firma}/{RRRR}/{MM}/{sha256}.ext</code>; sťahovanie len v rámci aktívnej firmy.</td></tr>
+      </table></div>
+    </section>
+
+    <section class="sec" data-level="4" id="l4-integr">
+      <span class="tag l4">Úroveň 4</span>
+      <h2>Integrácie a plánovač</h2>
+      <details open><summary>eKasa (Finančná správa SR)</summary><p><code>POST https://ekasa.financnasprava.sk/mdu/api/v1/opd/receipt/find</code> s telom <code>{"receiptId": "O-…"}</code>. Odpoveď <code>receipt</code> sa mapuje na neutrálnu štruktúru <code>ExtractedDocument</code>: organizácia, IČO, dátum a čas, položky (cena = riadok s DPH), základy a DPH podľa sadzieb. Offline bločky (OKP) idú cez Claude.</p></details>
+      <details><summary>Claude API (čítanie dokladov)</summary><p>Anthropic SDK, <code>client.messages.parse(…, output_format=ExtractedDocument)</code>, teda štruktúrovaný výstup validovaný Pydantic modelom. Vstup: text PDF, PDF dokument alebo až 3 obrázky (JPEG, max 2400 px). Kontext: názov a IČO firmy, zoznam zákaziek s aliasmi a názov súboru. Model sa nastavuje cez <code>CLAUDE_MODEL</code>. Zapnutý je server-side fallback a kontroluje sa <code>stop_reason == "refusal"</code>. Ak AI prečíta ID eKasa, eKasa sa skúsi znova a má prednosť.</p></details>
+      <details><summary>Google Drive + Gmail</summary><p>OAuth 2.0 (Web application, scopes <code>drive</code>, <code>gmail.modify</code>), refresh token v tabuľke <code>setting</code>. Gmail: dotaz <code>to:meno+{tag}@gmail.com is:unread has:attachment</code> → prílohy do Drive inboxu aj priamo do aplikácie → správa označená ako prečítaná. Drive: zoznam súborov v inboxe a bankovom inboxe → stiahnutie → hash dedup → presun do „spracované“.</p></details>
+      <details><summary>Plánovač</summary><p>Samostatný proces <code>python -m app.scheduler</code> (kontajner <code>scheduler</code>): inbox všetkých aktívnych firiem denne v čase z parametra <code>inbox_schedule_time</code> (Europe/Bratislava, zmena sa prejaví do 5 minút) a automatické overenia vozidiel o 06:17 (pre adaptéry s API).</p></details>
+      <details><summary>Overenie vozidla – adaptéry</summary><p><code>app/services/vehicle_check.py</code>: <code>Adapter(service, label, url, has_api)</code>. Ak služba má API, implementuje sa <code>check()</code> a výsledok sa porovná s evidenciou (<code>matches</code>). Ak nie (dnes eznamka.sk, SKP, TÜV SÜD), UI ponúkne odkaz a ručný zápis. URL sa dá prepísať nastavením <code>vehicle_check_url_{služba}</code>. Žiadne obchádzanie CAPTCHA.</p></details>
+    </section>
+
+    <section class="sec" data-level="4" id="l4-dev">
+      <span class="tag l4">Úroveň 4</span>
+      <h2>Kód, testy a rozšírenia</h2>
+      <pre>backend/app
+├── models/      core.py · work.py · docs.py          (SQLAlchemy 2)
+├── registry/    base.py (F, Entity, list engine) · crud.py · entities.py
+├── services/    calc · documents · ingest · prep · ekasa · extraction · bank · bank_parsers
+│                billing · reports · vehicle_check · google · exports · jobs · settings · audit
+├── routers/     auth · data · views · documents · reports · billing · bank · settings
+├── scheduler.py · cli.py (create-admin, seed-demo, run-inbox) · main.py
+frontend/src
+├── components/  DataTable · FilterBar · EntityDrawer · inputs (dátum, čas 24 h, čísla, ref) · Layout
+└── pages/       Dashboard · ProjectCosts · Profitability · Documents · DocumentDetail · Work · Bank …</pre>
+      <div class="grid2">
+        <div class="box"><h4>Testy</h4><p><code>cd backend &amp;&amp; pytest -q</code>: 25 testov (sadzby, km, snapshot, role, list engine, QR + eKasa mock, duplicity, rozdelenie, banka CAMT/CSV, fakturácia, DPH, mesačná kontrola, vozový park). CI v <code>.github/workflows/ci.yml</code>.</p></div>
+        <div class="box"><h4>Migrácie</h4><p><code>alembic revision --autogenerate -m "…"</code> → skontrolovať → <code>alembic upgrade head</code>. Kontajner <code>app</code> spúšťa <code>upgrade head</code> pri každom štarte.</p></div>
+        <div class="box"><h4>Nový zdroj dokladov (napr. WhatsApp)</h4><p>Adaptér iba zavolá <code>storage.store_file(…, source="whatsapp", note=skupina)</code> a <code>ingest.process_pending()</code>. Názov skupiny v <code>note</code> sa použije na návrh zákazky.</p></div>
+        <div class="box"><h4>Zdroj pravdy</h4><p><code>docs/master-prompt.md</code>: nové funkcie sa najprv dopíšu tam, až potom do kódu.</p></div>
+      </div>
+    </section>
+
+    <footer>Popis zodpovedá implementácii vo vetve repozitára (backend <code>app/</code>, frontend <code>src/</code>). Pri zmene pravidiel v kóde aktualizujte aj tento súbor.</footer>
+  </main>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const eur = (v) => new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" }).format(v || 0);
+  const num = (v, d = 2) => new Intl.NumberFormat("sk-SK", { minimumFractionDigits: 0, maximumFractionDigits: d }).format(v || 0);
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+  // ---------------------------------------------------------------- theme
+  const root = document.documentElement;
+  const savedTheme = store.get("hiw.theme");
+  if (savedTheme) root.dataset.theme = savedTheme;
+  $("#themeBtn").addEventListener("click", () => {
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    store.set("hiw.theme", root.dataset.theme);
+  });
+
+  // ---------------------------------------------------------------- levels
+  const WHO = {
+    1: "Pre každého: majiteľ firmy, nový kolega, pracovník. Čo aplikácia robí, prečo a na akých pravidlách stojí – bez technických detailov.",
+    2: "Pre človeka, ktorý v aplikácii denne pracuje: doklady, hodiny, tabuľky, fakturácia a mesačná kontrola.",
+    3: "Pre správcu a účtovne zdatného používateľa: presné pravidlá výpočtov, poradie krokov, tolerancie a parametre – s interaktívnymi simulátormi.",
+    4: "Pre IT a vývojára (aj Claude Code): architektúra, register polí, API, dátový model, bezpečnosť, integrácie a ako aplikáciu rozšíriť.",
+  };
+  const NAMES = { 1: "Základ", 2: "Používateľ", 3: "Pokročilý", 4: "Profesionál" };
+  let level = Number((location.hash.match(/^#u(\d)/) || [])[1] || store.get("hiw.level") || 1);
+  const cum = $("#cumulative");
+  cum.checked = store.get("hiw.cum") === "1";
+
+  function render() {
+    $$(".lvl").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.l) === level)));
+    $("#lvlTitle").textContent = `Úroveň ${level} – ${NAMES[level]}`;
+    $("#lvlWho").textContent = WHO[level];
+    const secs = $$("section.sec");
+    secs.forEach((s) => { const l = Number(s.dataset.level); s.hidden = cum.checked ? l > level : l !== level; });
+    const toc = $("#tocList");
+    toc.innerHTML = "";
+    secs.filter((s) => !s.hidden).forEach((s) => {
+      const a = document.createElement("a");
+      a.href = "#" + s.id;
+      a.textContent = (cum.checked ? `${s.dataset.level} · ` : "") + s.querySelector("h2").textContent;
+      a.dataset.target = s.id;
+      toc.appendChild(a);
+    });
+    history.replaceState(null, "", "#u" + level);
+    store.set("hiw.level", String(level));
+  }
+  $$(".lvl").forEach((b) => b.addEventListener("click", () => { level = Number(b.dataset.l); render(); window.scrollTo({ top: 0 }); }));
+  cum.addEventListener("change", () => { store.set("hiw.cum", cum.checked ? "1" : "0"); render(); });
+  const io = new IntersectionObserver((ents) => ents.forEach((e) => {
+    if (e.isIntersecting) $$("#tocList a").forEach((a) => a.classList.toggle("active", a.dataset.target === e.target.id));
+  }), { rootMargin: "-160px 0px -60% 0px" });
+  $$("section.sec").forEach((s) => io.observe(s));
+
+  // ---------------------------------------------------------------- L1 day story
+  const DAY = [
+    ["07:00 – Peter a Diesel prídu na Sikorky", "Do aplikácie (aj z mobilu) zadajú hodiny: Sikorky, 7:00–15:30, „Murárske práce“."],
+    ["07:05 – Transit ide na zákazku", "Vodič zadá jazdu bez km. Aplikácia vie, že Sikorky sú 25 km ďaleko, a počíta 2 × 25 + 10 % = 55 km."],
+    ["10:30 – Nákup v OBI", "Peter zaplatí firemnou kartou a bloček odfotí. Pri hodinách zaškrtne „nakúpený materiál“."],
+    ["Fotka sa dostane do inboxu", "Nahratím, cez Google Drive alebo e-mailom. Rovnaký súbor sa nikdy nespracuje dvakrát."],
+    ["20:00 – Automatické spracovanie", "Aplikácia prečíta QR kód, stiahne bloček z eKasy (všetky položky, DPH), navrhne zákazku Sikorky podľa názvu súboru a doklad dá „Na kontrolu“."],
+    ["Ráno – kontrola", "Klient otvorí „Na kontrolu“, vidí fotku aj údaje a jedným klikom potvrdí. Lepiacu pásku rozdelí rovnomerne na dve zákazky."],
+    ["O dva mesiace – papierový bloček", "Klient naskenuje QR a aplikácia odpovie: „Už máš, prišiel 4.11. od Petra.“ Označí ho ako fyzicky založený."],
+    ["Kedykoľvek – odpoveď", "„Koľko nás stoja Sikorky?“ Práca + materiál + doprava, porovnanie s rozpočtom, rozklik až na jednotlivý bloček."],
+  ];
+  let dayI = 0;
+  function renderDay() {
+    $("#dayStory").innerHTML = DAY.map(([t, d], i) =>
+      `<div class="step ${i <= dayI ? "on" : ""} ${i === dayI ? "cur" : ""}"><div class="dot">${i + 1}</div><div><b>${t}</b><small>${d}</small></div></div>`).join("");
+    $("#dayInfo").textContent = `Krok ${dayI + 1} z ${DAY.length}`;
+  }
+  $$("[data-day]").forEach((b) => b.addEventListener("click", () => {
+    const v = Number(b.dataset.day);
+    dayI = v === 0 ? 0 : Math.min(DAY.length - 1, Math.max(0, dayI + v));
+    renderDay();
+  }));
+
+  // ---------------------------------------------------------------- L1 calculator
+  function calc() {
+    const g = (id) => Number($(id).value) || 0;
+    const labor = g("#k-h") * g("#k-r");
+    const mat = g("#k-m");
+    const km = Math.round(2 * g("#k-d") * 1.1 * 10) / 10;
+    const transport = km * g("#k-t") * g("#k-v");
+    const total = labor + mat + transport;
+    $("#k-total").textContent = eur(total);
+    const p = (x) => (total ? (x / total) * 100 : 0);
+    $("#k-bars").innerHTML = `<div style="width:${p(labor)}%;background:var(--l1)" title="Práca ${eur(labor)}"></div><div style="width:${p(mat)}%;background:var(--l2)" title="Materiál ${eur(mat)}"></div><div style="width:${p(transport)}%;background:var(--l3)" title="Doprava ${eur(transport)}"></div>`;
+    $("#k-explain").textContent = `Práca ${eur(labor)} (${num(g("#k-h"))} h × ${eur(g("#k-r"))}) · Materiál ${eur(mat)} · Doprava ${eur(transport)} (${g("#k-t")} jázd × ${num(km, 1)} km × ${eur(g("#k-v"))}/km, kde ${num(km, 1)} km = 2 × ${g("#k-d")} km + 10 %).`;
+  }
+  $$("#l1-kalk input").forEach((i) => i.addEventListener("input", calc));
+
+  // ---------------------------------------------------------------- L2 navigation map
+  const NAV = {
+    "Prehľady": "Dashboard (upozornenia, rozpracované zákazky), Zákazky – náklady (po zložkách, rozpočet, zostatok, rozklik až na doklad), Ziskovosť (výnosy, zisk, marža, rozpracovanosť, po mesiacoch).",
+    "Doklady": "Na kontrolu (fronta na potvrdenie), Bločky, Prijaté a Vystavené faktúry, Rýchla kontrola bločku (QR), Inbox a súbory (čo prišlo a ako sa spracovalo), Položky a priradenia.",
+    "Práca a doprava": "Hodiny a Jazdy: rýchle zadanie a tabuľka. Toto je všetko, čo vidí aj pracovník.",
+    "Vozový park": "Vozidlá, Sadzby €/km s platnosťou, PZP a poistenie, Diaľničné známky, Servis, Overenie vozidla (upozornenia na platnosti a odkazy na verejné overenie).",
+    "Financie": "DPH (mesačný vstup a výstup), Banka (výpisy, párovanie, čo chýba), Mesačná kontrola, Pravidlá bankových pohybov.",
+    "Výstupy": "Podklad k fakturácii (PDF, XLSX, CSV), Podklad pre pracovníka, Exporty.",
+    "Číselníky": "Firmy, Bankové účty, Číselné rady, Odberatelia, Zákazky, Pracovníci, Sadzby pracovníkov, Opakujúce sa faktúry.",
+    "Nastavenia": "Používatelia a roly, Parametre, Integrácie (Google, Claude, eKasa, banky), Audit log.",
+  };
+  $("#navBtns").innerHTML = Object.keys(NAV).map((k) => `<button class="btn" data-nav="${k}">${k}</button>`).join("");
+  $$("[data-nav]").forEach((b) => b.addEventListener("click", () => {
+    $$("[data-nav]").forEach((x) => x.classList.toggle("primary", x === b));
+    $("#navDetail").innerHTML = `<h4>${b.dataset.nav}</h4><p>${NAV[b.dataset.nav]}</p>`;
+  }));
+  $("[data-nav]").click();
+
+  // ---------------------------------------------------------------- L2 split even (same algorithm as the app)
+  function split() {
+    const total = Math.round((Number($("#s-amt").value) || 0) * 100);
+    const n = Math.max(1, Math.min(10, Number($("#s-n").value) || 1));
+    const base = Math.round(total / n);
+    const parts = Array(n).fill(base);
+    parts[n - 1] = total - base * (n - 1);
+    $("#s-out").innerHTML = parts.map((c, i) => `<span class="pill info" style="margin:2px">Zákazka ${i + 1}: ${eur(c / 100)}</span>`).join(" ") +
+      `<div style="font-size:.88rem;color:var(--muted);margin-top:6px">Na centy sa zaokrúhľuje tak, aby súčet presne sedel: zvyšok ide poslednej zákazke. Súčet = ${eur(parts.reduce((a, b) => a + b, 0) / 100)}.</div>`;
+  }
+  $$("#s-amt, #s-n").forEach((i) => i.addEventListener("input", split));
+
+  // ---------------------------------------------------------------- L2 originals
+  const ORIG = {
+    a: ['<span class="pill ok">zaevidovaný a fyzicky založený</span>', "Všetko v poriadku. Druhý súbor sa len pripojí k dokladu ako „sken fyzického originálu“, nový záznam nevznikne."],
+    b: ['<span class="pill warn">zaevidovaný, fyzicky chýba</span>', "Doklad sa normálne započíta, ale v Mesačnej kontrole bude v zozname „Bločky bez fyzického originálu“, kým papier nedonesiete."],
+    c: ['<span class="pill info">nový záznam zo skenu</span>', "Aplikácia bloček nepoznala, preto ho založí rovno ako fyzicky založený a dá ho na kontrolu."],
+  };
+  $$("[data-o]").forEach((b) => b.addEventListener("click", () => { const [p, t] = ORIG[b.dataset.o]; $("#origOut").innerHTML = `${p}<p style="margin:.4em 0 0">${t}</p>`; }));
+
+  // ---------------------------------------------------------------- L2 hours
+  function parseT(s) {
+    const t = String(s).trim().replace(/[.,h ]/g, ":");
+    let m = /^(\d{1,2}):(\d{1,2})$/.exec(t) || /^(\d{1,2})(\d{2})$/.exec(t);
+    if (m) return +m[1] <= 24 && +m[2] < 60 ? [+m[1] % 24, +m[2]] : null;
+    m = /^(\d{1,2})$/.exec(t);
+    return m && +m[1] <= 24 ? [+m[1] % 24, 0] : null;
+  }
+  function hours() {
+    const a = parseT($("#h-from").value), b = parseT($("#h-to").value), r = Number($("#h-round").value);
+    if (!a || !b) { $("#h-out").innerHTML = '<span class="pill bad">Neplatný čas – použite 24 h formát, napr. 7:30 alebo 1630</span>'; return; }
+    let d = b[0] * 60 + b[1] - (a[0] * 60 + a[1]);
+    const night = d <= 0;
+    if (night) d += 1440;
+    let h = d / 60;
+    if (r > 0) h = Math.round(h / r) * r;
+    const pad = (x) => String(x).padStart(2, "0");
+    $("#h-out").innerHTML = `<span class="big">${num(h)} h</span> <span style="color:var(--muted)">(${pad(a[0])}:${pad(a[1])} – ${pad(b[0])}:${pad(b[1])}${night ? ", cez polnoc" : ""}, bez automatickej prestávky)</span>`;
+  }
+  $$("#h-from, #h-to, #h-round").forEach((i) => i.addEventListener("input", hours));
+
+  // ---------------------------------------------------------------- L2 billing lifecycle
+  let bState = 0;
+  const B_TXT = [
+    ["Žiadny podklad", "info", "Vyberte zákazku a obdobie. Náhľad ukáže nevyfakturované hodiny, materiál a dopravu."],
+    ["Návrh", "warn", "Podklad sa dá upravovať (odobrať položky, zmeniť DPH) a exportovať. Položky ešte nie sú označené ako vyfakturované."],
+    ["Uzavretý", "ok", "Hodiny, jazdy a materiál dostali príznak vyfakturované. Nový podklad ich už neponúkne a v Hodinách sa nedajú meniť."],
+    ["Uzavretý + faktúra", "ok", "Podklad je naviazaný na vystavenú faktúru. Kým väzba trvá, podklad sa nedá znovu otvoriť."],
+  ];
+  function renderB() {
+    const [t, c, d] = B_TXT[bState];
+    $("#b-state").textContent = t; $("#b-state").className = "pill " + c; $("#b-text").textContent = d;
+    $("#b-create").disabled = bState !== 0; $("#b-close").disabled = bState !== 1;
+    $("#b-link").disabled = bState !== 2; $("#b-open").disabled = bState !== 2;
+  }
+  $("#b-create").onclick = () => { bState = 1; renderB(); };
+  $("#b-close").onclick = () => { bState = 2; renderB(); };
+  $("#b-link").onclick = () => { bState = 3; renderB(); };
+  $("#b-open").onclick = () => { bState = 1; renderB(); };
+
+  // ---------------------------------------------------------------- L3 rate lookup (mirrors calc.resolve_worker_rates)
+  const RATES = [
+    { lvl: "1. pracovník + zákazka", on: true, cost: 11, bill: "", from: "2026-01-01", to: "" },
+    { lvl: "2. pracovník + firma", on: false, cost: 13, bill: 24, from: "", to: "" },
+    { lvl: "3. default pracovníka", on: true, cost: 12, bill: 22, from: "", to: "" },
+  ];
+  function rateRows() {
+    const t = $("#rateTbl");
+    t.querySelectorAll("tr.r").forEach((r) => r.remove());
+    RATES.forEach((r, i) => {
+      const tr = document.createElement("tr");
+      tr.className = "r";
+      tr.innerHTML = `<td>${r.lvl}</td><td><input type="checkbox" data-i="${i}" data-k="on" ${r.on ? "checked" : ""}></td>
+        <td class="num"><input type="number" style="width:80px" data-i="${i}" data-k="cost" value="${r.cost}" placeholder="—"></td>
+        <td class="num"><input type="number" style="width:80px" data-i="${i}" data-k="bill" value="${r.bill}" placeholder="—"></td>
+        <td><input type="date" data-i="${i}" data-k="from" value="${r.from}"></td><td><input type="date" data-i="${i}" data-k="to" value="${r.to}"></td>`;
+      t.appendChild(tr);
+    });
+    $$("#rateTbl input").forEach((inp) => inp.addEventListener("input", () => {
+      const r = RATES[inp.dataset.i];
+      r[inp.dataset.k] = inp.type === "checkbox" ? inp.checked : inp.value;
+      rateCalc();
+    }));
+  }
+  function rateCalc() {
+    const d = $("#r-date").value, h = Number($("#r-h").value) || 0;
+    const valid = (r) => r.on && (!r.from || r.from <= d) && (!r.to || r.to >= d);
+    const pick = (k) => { for (const r of RATES) if (valid(r) && r[k] !== "" && r[k] !== null) return [Number(r[k]), r.lvl]; return [null, null]; };
+    const [c, cl] = pick("cost"), [b, bl] = pick("bill");
+    $("#rateOut").innerHTML = `Nákladová: <b>${c === null ? "nenájdená (náklad 0 €)" : eur(c) + "/h"}</b> ${cl ? `<span class="pill info">${cl}</span>` : ""}<br>
+      Fakturačná: <b>${b === null ? "nenájdená" : eur(b) + "/h"}</b> ${bl ? `<span class="pill info">${bl}</span>` : ""}<br>
+      Za ${num(h)} h: náklad <b>${eur((c || 0) * h)}</b>, fakturovateľná hodnota <b>${eur((b || 0) * h)}</b>`;
+  }
+  $$("#r-date, #r-h").forEach((i) => i.addEventListener("input", rateCalc));
+
+  // ---------------------------------------------------------------- L3 trip
+  function trip() {
+    const d = Number($("#t-d").value) || 0, p = Number($("#t-p").value) || 0, r = Number($("#t-r").value) || 0;
+    const given = $("#t-km").value;
+    const km = given !== "" ? Number(given) : Math.round(2 * d * (1 + p / 100) * 10) / 10;
+    $("#t-out").innerHTML = `<span class="big">${num(km, 1)} km × ${eur(r)} = ${eur(km * r)}</span><div style="color:var(--muted);font-size:.88rem">${given !== "" ? "Použité zadané km (majú prednosť)." : `Dopočítané: 2 × ${num(d, 1)} × (1 + ${num(p)}/100) – stĺpec „Km dopočítané“ = áno.`}</div>`;
+  }
+  $$("#l3-km input").forEach((i) => i.addEventListener("input", trip));
+
+  // ---------------------------------------------------------------- L3 pipeline
+  function pipeSteps() {
+    const pdf = $("#p-pdf").checked, qr = $("#p-qr").checked, ek = $("#p-ek").checked, cl = $("#p-cl").checked,
+      dup = $("#p-dup").checked, fuel = $("#p-fuel").checked;
+    const S = [];
+    S.push(["Uloženie súboru", "Spočíta sa SHA-256. Rovnaký súbor v tej istej firme sa ďalej nespracúva.", true]);
+    S.push([pdf ? "PDF s textom → text" : "Príprava obrázka", pdf ? "Text sa číta priamo (≥ 40 znakov), bez OCR. Doklad je elektronický, takže papierový originál nepotrebuje." : "Fotka sa otočí podľa EXIF, HEIC sa skonvertuje, zmenší sa na max 2400 px. Sken v PDF sa vyrenderuje na obrázky (max 3 strany).", true]);
+    S.push(["QR kód", qr ? "Z QR sa deterministicky vyčíta ID dokladu O-… (OpenCV)." : "QR sa nenašiel alebo nie je čitateľný.", true]);
+    if (qr && dup) {
+      S.push(["Duplicita podľa ID eKasa", "ID už existuje → nový doklad nevznikne, súbor sa pripojí k pôvodnému (pri skene sa označí fyzický originál). Koniec.", true, "end"]);
+      return S;
+    }
+    let src = null;
+    if (qr) {
+      S.push(["eKasa", ek ? "Finančná správa vráti doklad: obchod, IČO, dátum, čas, všetky položky, DPH. Zdroj = eKasa." : "eKasa neodpovedala alebo doklad nenašla.", true]);
+      if (ek) src = "eKasa";
+    }
+    if (!src) {
+      if (cl) {
+        S.push(["Claude API", pdf ? "Z textu PDF sa vyextrahuje štruktúra (hlavička, položky, DPH, poznámka, návrh zákazky)." : "Z obrázka sa vyčíta štruktúra dokladu vrátane ID eKasa a ručnej poznámky.", true]);
+        src = pdf ? "text z PDF + Claude" : "Claude API";
+        if (!qr) S.push(["eKasa – druhý pokus", "Ak Claude prečítal ID O-…, skontroluje sa duplicita a skúsi sa eKasa znova; ak odpovie, má prednosť.", true]);
+      } else {
+        S.push(["Bez extrakcie", "Claude API nie je nastavené → doklad sa založí prázdny s upozornením „doplňte ručne“.", true]);
+        src = "ručne";
+      }
+    }
+    if (dup && !qr) {
+      S.push(["Záložná kontrola duplicity", "IČO + dátum + suma (+ čas ±2 min) sa zhoduje → súbor sa pripojí k existujúcemu dokladu. Koniec.", true, "end"]);
+      return S;
+    }
+    S.push(["Kontroly", "Súčet položiek vs. suma, základ + DPH, IČO odberateľa vs. aktívna firma → upozornenia.", true]);
+    S.push(["Návrh zákazky", fuel ? "Kľúčové slovo čerpacej stanice → navrhne sa Réžia (doprava sa počíta z km)." : "Poznámka → názov súboru → opakujúca sa faktúra → AI → história dodávateľa.", true]);
+    S.push(["Na kontrolu", `Doklad čaká na potvrdenie. Zdroj údajov: ${src}. Do prehľadov ide až po potvrdení.`, true, "end"]);
+    return S;
+  }
+  let pipeTimer = null;
+  function drawPipe(upto) {
+    const S = pipeSteps();
+    $("#pipe").innerHTML = S.map(([t, d], i) =>
+      `<div class="step ${i <= upto ? "on" : ""} ${i === upto ? "cur" : ""}"><div class="dot">${i + 1}</div><div><b>${t}</b><small>${d}</small></div></div>`).join("");
+    return S.length;
+  }
+  $("#p-play").onclick = () => {
+    clearInterval(pipeTimer);
+    let i = 0; const n = drawPipe(0);
+    pipeTimer = setInterval(() => { i++; drawPipe(i); if (i >= n - 1) clearInterval(pipeTimer); }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900);
+  };
+  $("#p-all").onclick = () => { clearInterval(pipeTimer); drawPipe(99); };
+  $$("#l3-pipeline input").forEach((i) => i.addEventListener("change", () => { clearInterval(pipeTimer); drawPipe(99); }));
+
+  // ---------------------------------------------------------------- L3 profitability
+  function profit() {
+    const g = (id) => Number($(id).value) || 0;
+    const rev = g("#z-rev"), cost = g("#z-cost");
+    const wip = g("#z-h") * g("#z-br") + g("#z-m") * (1 + g("#z-mk") / 100);
+    const p = rev - cost;
+    $("#z-out").innerHTML = `Zisk: <b style="color:${p < 0 ? "var(--bad)" : "var(--ok)"}">${eur(p)}</b> · marža <b>${rev ? num((p / rev) * 100, 1) + " %" : "–"}</b><br>
+      Rozpracovanosť: <b>${eur(wip)}</b> = ${num(g("#z-h"))} h × ${eur(g("#z-br"))} + ${eur(g("#z-m"))} × ${num(1 + g("#z-mk") / 100, 2)}<br>
+      Očakávaný zisk: <span class="big">${eur(p + wip)}</span>`;
+  }
+  $$("#l3-zisk input").forEach((i) => i.addEventListener("input", profit));
+
+  // ---------------------------------------------------------------- L3 bank scoring (mirrors bank.candidates_for / match_transaction)
+  function match() {
+    const c = (id) => $(id).checked;
+    let s = 0; const why = [];
+    if (c("#m-vs")) { s += 60; why.push("VS"); }
+    if (c("#m-amt")) { s += 30; why.push("suma"); }
+    if (c("#m-iban")) { s += 25; why.push("IBAN"); }
+    if (c("#m-name")) { s += 15; why.push("názov"); }
+    if (c("#m-date")) { s += 10; why.push("dátum"); }
+    const uniq = c("#m-uniq");
+    const cand = s >= 30 && (why.includes("suma") || why.includes("VS"));
+    let res;
+    if (!cand) res = '<span class="pill bad">nie je kandidát</span> Pohyb ostane „Bez dokladu“ a objaví sa v zozname „Čo chýba“.';
+    else {
+      const strong = (why.includes("VS") && why.includes("suma")) || (why.includes("suma") && (why.includes("IBAN") || why.includes("názov")) && uniq);
+      res = strong && uniq ? '<span class="pill ok">spárované automaticky</span> Párovanie je potvrdené a doklad dostane stav úhrady.'
+        : '<span class="pill warn">návrh</span> Až 3 najlepší kandidáti čakajú na vaše potvrdenie v detaile pohybu.';
+    }
+    $("#m-out").innerHTML = `Skóre <span class="big">${s}</span> (${why.join(", ") || "nič"}) → ${res}`;
+  }
+  $$("#l3-banka input").forEach((i) => i.addEventListener("change", match));
+
+  // ---------------------------------------------------------------- L3 params
+  const PARAMS = [
+    ["Prirážka k default vzdialenosti jazdy (%)", "10"], ["Zaokrúhlenie hodín (h)", "0,25"],
+    ["Dni na doloženie dokladu k nákupu materiálu", "7"], ["Default prirážka na materiál pri fakturácii (%)", "0"],
+    ["Default sadzba DPH pre podklad k fakturácii (%)", "23"], ["Predstih upozornení vozového parku (dni)", "30"],
+    ["Predstih upozornenia na servis (km)", "1 000"], ["Tolerancia dní pri párovaní banky", "5"],
+    ["Tolerancia času pri hľadaní duplicitných bločkov (min)", "2"], ["Kľúčové slová pre Réžiu", "slovnaft, omv, shell, …"],
+    ["Čas automatického spracovania inboxu (len globálne)", "20:00"], ["Súbory z Drive inboxu = sken fyzického originálu", "áno"],
+  ];
+  $("#paramTbl").insertAdjacentHTML("beforeend", PARAMS.map(([a, b]) => `<tr><td>${a}</td><td class="num">${b}</td></tr>`).join(""));
+
+  // ---------------------------------------------------------------- L4 architecture boxes
+  const box = (g, x, y, label, sub) => g.insertAdjacentHTML("beforeend",
+    `<rect x="${x}" y="${y}" width="250" height="40" rx="8" fill="var(--surface)" stroke="var(--border)"/><text x="${x + 12}" y="${y + 17}" fill="var(--text)">${label}</text><text x="${x + 12}" y="${y + 32}" fill="var(--muted)" font-size="10.5">${sub}</text>`);
+  const IN = [["Web UI (formuláre, upload)", "hodiny, jazdy, doklady"], ["Google Drive inbox", "per firma, denne 20:00"], ["Gmail plus-adresa", "prílohy → Drive + aplikácia"], ["Bankové výpisy", "CAMT.053 · CSV · XLSX · PDF"], ["eKasa · Claude API", "čítanie bločkov a faktúr"], ["[neskôr] WhatsApp", "hodiny a bločky zo skupín"]];
+  const OUT = [["Dashboard, náklady zákaziek", "ziskovosť, rozpracovanosť"], ["Podklad k fakturácii", "PDF · XLSX · CSV"], ["Podklad pre pracovníka", "PDF · XLSX"], ["DPH, banka, mesačná kontrola", "čo chýba"], ["Exporty tabuliek", "podľa pohľadu"], ["[neskôr] AI asistent, reporty", "cez API, nie priamo SQL"]];
+  const gin = $("#in"), gout = $("#out");
+  IN.forEach(([a, b], i) => { box(gin, 20, 35 + i * 50, a, b); gin.insertAdjacentHTML("beforeend", `<line x1="272" y1="${55 + i * 50}" x2="328" y2="${185}" stroke="var(--muted)" stroke-width="1" marker-end="url(#ar)" opacity=".55"/>`); });
+  OUT.forEach(([a, b], i) => { box(gout, 630, 35 + i * 50, a, b); gout.insertAdjacentHTML("beforeend", `<line x1="582" y1="${185}" x2="626" y2="${55 + i * 50}" stroke="var(--muted)" stroke-width="1" marker-end="url(#ar)" opacity=".55"/>`); });
+
+  // ---------------------------------------------------------------- L4 API builder
+  const ENT = {
+    timesheets: ["date", ["date", "worker_id", "project_id", "hours", "cost_amount"], ["worker_id", "project_id"]],
+    trips: ["date", ["date", "vehicle_id", "project_id", "km_effective", "cost_amount"], ["vehicle_id", "project_id"]],
+    documents: ["issue_date", ["issue_date", "partner_name", "total_gross", "status", "projects"], ["doc_type", "status"]],
+    allocations: ["doc_date", ["doc_date", "project_id", "direction", "amount_net"], ["project_id", "direction"]],
+    bank_transactions: ["booking_date", ["booking_date", "amount", "counterparty_name", "status"], ["status", "tx_type"]],
+  };
+  $("#a-ent").innerHTML = Object.keys(ENT).map((k) => `<option>${k}</option>`).join("");
+  function apiFill() {
+    const e = ENT[$("#a-ent").value];
+    $("#a-sort").innerHTML = e[1].map((k) => `<option>${k}</option>`).join("");
+    $("#a-group").innerHTML = `<option value="">—</option>` + e[2].map((k) => `<option>${k}</option>`).join("");
+    api();
+  }
+  function api() {
+    const name = $("#a-ent").value, e = ENT[name];
+    const filter = [{ field: e[0], op: "between", value: [$("#a-from").value || null, $("#a-to").value || null] }];
+    const p = new URLSearchParams({ columns: e[1].join(","), sort: `${$("#a-sort").value}:${$("#a-dir").value}`, filter: JSON.stringify(filter), page: "1", page_size: "50" });
+    if ($("#a-group").value) p.set("group_by", $("#a-group").value);
+    if ($("#a-q").value) p.set("q", $("#a-q").value);
+    $("#a-out").textContent = `GET /api/data/${name}?${p.toString()}
+X-Company-Id: 1
+
+# parametre (dekódované)
+columns  = ${e[1].join(",")}
+sort     = ${$("#a-sort").value}:${$("#a-dir").value}        (viac úrovní: a:asc,b:desc)
+filter   = ${JSON.stringify(filter)}
+           op: contains | eq | neq | in | between | gte | lte | gt | lt | isnull | notnull | starts | not_contains
+group_by = ${$("#a-group").value || "—"}
+q        = ${$("#a-q").value || "—"}
+
+# odpoveď
+{ "rows": [ { "id": …, "${e[1][0]}": …, "<ref>__label": "…" } ],
+  "total": 123, "totals": { "<číselné stĺpce>": … },
+  "groups": ${$("#a-group").value ? '[ { "value": …, "label": "…", "count": …, "totals": {…} } ]' : "null"},
+  "columns": [ … ], "page": 1, "page_size": 50 }`;
+  }
+  $("#a-ent").addEventListener("change", apiFill);
+  $$("#l4-registry .fields select:not(#a-ent), #l4-registry .fields input").forEach((i) => i.addEventListener("input", api));
+
+  // ---------------------------------------------------------------- L4 data model
+  const MODEL = {
+    company: "Firma: IČO, IČ DPH, platiteľ DPH, Drive priečinky (inbox, spracované, bankový inbox), e-mail tagy. Pri založení automaticky vznikne projekt Réžia.",
+    project: "Zákazka: firma (práve jedna), aliasy, odberateľ, rozpočet, zmluvná cena, typ fakturácie (hourly / fixed / combined), prirážka na materiál, fakturácia dopravy + €/km, default_km_one_way, stav, is_overhead, active.",
+    worker: "Pracovník (globálny): typ vzťahu, IČO, väzba worker_company na firmy. Sadzby v worker_rate.",
+    worker_rate: "Sadzba: worker, company?, project?, cost_rate?, billing_rate?, valid_from/to. Úroveň určujú vyplnené company/project.",
+    timesheet_entry: "Hodiny: worker, project?, date, time_from/to, hours, material_bought, billable, snapshot cost_rate/billing_rate, cost_amount, billable_amount, billing_statement_id (vyfakturované).",
+    trip: "Jazda: vehicle (aj inej firmy), project, driver, crew (trip_crew), km?, km_effective, km_computed, snapshot rate_per_km, cost_amount, billing_rate_per_km, billable_amount, billing_statement_id.",
+    vehicle: "Vozidlo + vehicle_rate (€/km s platnosťou), vehicle_insurance (PZP/havarijné), vehicle_vignette, vehicle_service (ďalší servis dátum/km), vehicle_check (výsledky overení).",
+    source_file: "Súbor: sha256, zdroj (upload/drive/email/…), kind_hint, physical, stav spracovania, väzba na doklad. Všetky súbory dokladu sú v document_source (original / physical_scan / duplicate).",
+    document: "Doklad: typ (receipt / invoice_in / invoice_out), partner + IČO/IČ DPH/IBAN, buyer_ico, číslo, rad, ekasa_id, dátumy, VS, sumy, vat_breakdown, extraction_source + log, status (review/confirmed), payment_status, is_electronic, physical_original, duplicate_of, warnings.",
+    allocation: "Priradenie: document, line? (null = celý doklad), project, direction (cost / revenue), share_pct?, quantity?, amount_net, amount_gross, billing_statement_id. Súčet = suma dokladu/položky (±0,02).",
+    billing_statement: "Podklad k fakturácii: project, obdobie, status (draft/closed), group_by, vat_rate, súčty, invoice_document_id + riadky billing_statement_line s odkazom na timesheet/allocation/trip.",
+    bank_transaction: "Pohyb: účet, dátumy, suma (± ), protistrana + IBAN, VS/SS/KS, správa, typ, dedupe_key (unikátny vo firme), status (unmatched/suggested/matched/no_document). Párovania v transaction_match, pravidlá v transaction_rule.",
+    table_view: "Uložený pohľad: user, entita/pohľad, názov, config JSON (stĺpce, šírky, triedenie, filtre, zoskupenie), is_default, shared, is_last (posledný stav).",
+    audit_log: "Audit: ts, user, company, entity, entity_id, action, changes JSON {pole: [stará, nová]}.",
+  };
+  $("#entBtns").innerHTML = Object.keys(MODEL).map((k) => `<button class="btn" data-ent="${k}"><code style="background:none">${k}</code></button>`).join("");
+  $$("[data-ent]").forEach((b) => b.addEventListener("click", () => {
+    $$("[data-ent]").forEach((x) => x.classList.toggle("primary", x === b));
+    $("#entDetail").innerHTML = `<h4><code>${b.dataset.ent}</code></h4><p>${MODEL[b.dataset.ent]}</p>`;
+  }));
+  $('[data-ent="allocation"]').click();
+
+  // ---------------------------------------------------------------- init
+  renderDay(); calc(); split(); hours(); renderB(); rateRows(); rateCalc(); trip(); drawPipe(99); profit(); match(); apiFill();
+  $$("[data-o]")[1].click();
+  render();
+})();
+</script>
+</body>
+</html>

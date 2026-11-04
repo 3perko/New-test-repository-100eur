@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# Záloha databázy a uložených súborov. Spúšťajte z koreňa repozitára, napr. denne cez cron:
-#   15 2 * * * cd /opt/naklady && ./deploy/backup.sh >> /var/log/naklady-backup.log 2>&1
+# Záloha databázy a uložených súborov (číta .env z koreňa repozitára). Napr. denne cez cron:
+#   15 2 * * * /opt/naklady/deploy/backup.sh >> /var/log/naklady-backup.log 2>&1
 set -euo pipefail
+cd "$(dirname "$0")/.."
+env_get() { [ -f .env ] && grep -E "^$1=" .env | tail -1 | cut -d= -f2- | tr -d '\r' || true; }
+POSTGRES_USER=${POSTGRES_USER:-$(env_get POSTGRES_USER)}
+POSTGRES_DB=${POSTGRES_DB:-$(env_get POSTGRES_DB)}
 DEST=${BACKUP_DIR:-./backups}
 STAMP=$(date +%Y%m%d-%H%M)
 mkdir -p "$DEST"

@@ -7,7 +7,9 @@ Webová aplikácia na evidenciu nákladov, výnosov a ziskovosti zákaziek pre v
 - **Frontend:** React 18 + TypeScript, Vite, TanStack Table + Query, Tailwind CSS (svetlý aj tmavý režim, mobile-first)
 - **Nasadenie:** Docker Compose na Ubuntu serveri, HTTPS cez Caddy
 
-Návod na overenie funkcií krok za krokom je v **[docs/navod-overenie.md](docs/navod-overenie.md)**.
+- **Inštalácia servera** (vlastný počítač, prístup z mobilov, cloud, zálohy): **[installation-guide/README.md](installation-guide/README.md)**. Postup pre Claude Code je v [installation-guide/CLAUDE.md](installation-guide/CLAUDE.md).
+- **Ako aplikácia funguje** (interaktívne, 4 úrovne od základov po architektúru): otvorte v prehliadači **[How-It-Works/index.html](How-It-Works/index.html)**.
+- **Overenie funkcií** krok za krokom: **[docs/navod-overenie.md](docs/navod-overenie.md)**.
 
 ---
 
